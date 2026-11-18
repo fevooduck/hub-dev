@@ -1,0 +1,58 @@
+---
+import { SUPPORT_LABEL, SUPPORT_SHORT, explorerUrl } from '../../lib/labels.ts';
+import { STUDY_LABEL } from '../../lib/items.ts';
+import type { ItemRow } from '../../lib/queries.ts';
+import { formatDate } from '../../lib/text.ts';
+
+interface Props {
+  item: ItemRow;
+  compact?: boolean;
+  showStatus?: boolean;
+}
+
+const { item, compact = false, showStatus = false } = Astro.props;
+const stars = item.relevance === null ? null : `${'★'.repeat(item.relevance)}${'☆'.repeat(5 - item.relevance)}`;
+const supportShort = SUPPORT_SHORT[item.support_status];
+---
+
+<article class:list={['card', { 'card--security': item.is_security, 'card--muted': item.study_status === 'descartado' }]}>
+  <div class="card__meta">
+    {item.is_security && <span class="badge badge--security">Segurança</span>}
+    {item.source && <span>{item.source}</span>}
+    {item.published_at ? <time datetime={item.published_at.toISOString()}>{formatDate(item.published_at)}</time> : <span>sem data</span>}
+    {stars && <span class="stars" title={`Relevância ${item.relevance} de 5`} aria-label={`Relevância ${item.relevance} de 5`}>{stars}</span>}
+    {showStatus && item.study_status !== 'novo' && <span class="badge badge--status">{STUDY_LABEL[item.study_status]}</span>}
+  </div>
+  <h3 class="card__title"><a href={`/item/${item.id}`}>{item.title}</a></h3>
+  {item.summary ? <p class="card__summary">{item.summary}</p> : <p class="card__pending">Aguardando curadoria</p>}
+  {
+    !compact && item.impact && (
+      <p class="card__impact">
+        <strong>Impacto:</strong>{' '}{item.impact}
+      </p>
+    )
+  }
+  {
+    !compact && item.study_hint && item.study_status === 'pra_testar' && (
+      <p class="card__hint">
+        <strong>Pra testar:</strong>{' '}{item.study_hint}
+      </p>
+    )
+  }
+  <div class="card__foot">
+    <div class="chips">
+      {item.stacks.map((slug) => <a class="chip" href={`/itens?stack=${slug}`}>{slug}</a>)}
+    </div>
+    {
+      supportShort &&
+        (item.web_feature_id ? (
+          <a class={`badge badge--${item.support_status}`} href={explorerUrl(item.web_feature_id)} target="_blank" rel="noopener noreferrer" title={SUPPORT_LABEL[item.support_status]}>
+            {supportShort}
+          </a>
+        ) : (
+          <span class={`badge badge--${item.support_status}`} title={SUPPORT_LABEL[item.support_status]}>{supportShort}</span>
+        ))
+    }
+    <a class="ext" href={item.url} target="_blank" rel="noopener noreferrer">fonte ↗</a>
+  </div>
+</article>

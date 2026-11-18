@@ -1,0 +1,156 @@
+---
+import DbError from '../components/DbError.astro';
+import ItemCard from '../components/ItemCard.astro';
+import Base from '../layouts/Base.astro';
+import { homeData, listStacks, recentNotes } from '../../lib/queries.ts';
+import { formatDate } from '../../lib/text.ts';
+
+let data: Awaited<ReturnType<typeof homeData>> | undefined;
+let stacks: Awaited<ReturnType<typeof listStacks>> = [];
+let notes: Awaited<ReturnType<typeof recentNotes>> = [];
+let dbError: string | undefined;
+try {
+  [data, stacks, notes] = await Promise.all([homeData(), listStacks(), recentNotes(5)]);
+} catch (error) {
+  dbError = (error as Error).message;
+}
+---
+
+<Base active="inicio">
+  <div class="page-head">
+    <div>
+      <h1>Hub Dev</h1>
+      <p class="lead">Novidades de desenvolvimento web curadas para estudo: o que mudou, o que muda no trabalho e o que vale testar.</p>
+    </div>
+  </div>
+
+  {dbError && <DbError message={dbError} />}
+
+  {
+    data && (
+      <>
+        <div class="stats">
+          <a class="stat" href="/itens?curados=pendentes">
+            <span class="stat__value">{data.stats.pending}</span>
+            <span class="stat__label">aguardando curadoria</span>
+          </a>
+          <a class="stat" href="/estudo">
+            <span class="stat__value">{data.stats.to_test}</span>
+            <span class="stat__label">pra testar · {data.stats.testing} testando</span>
+          </a>
+          <a class:list={['stat', { 'stat--danger': data.stats.security_30d > 0 }]} href="/itens?stack=seguranca">
+            <span class="stat__value">{data.stats.security_30d}</span>
+            <span class="stat__label">alertas de segurança (30 dias)</span>
+          </a>
+          <a class="stat" href="/itens">
+            <span class="stat__value">{data.stats.total}</span>
+            <span class="stat__label">itens · ingestão: {data.stats.last_ingest ? formatDate(data.stats.last_ingest) : 'nunca'}</span>
+          </a>
+        </div>
+
+        <div class="layout">
+          <div>
+            {data.security.length > 0 && (
+              <section class="section" aria-labelledby="sec-seguranca">
+                <h2 id="sec-seguranca">🔴 Segurança</h2>
+                <div class="stack-list">
+                  {data.security.map((item) => (
+                    <ItemCard item={item} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section class="section" aria-labelledby="sec-destaques">
+              <div class="section__head">
+                <h2 id="sec-destaques">⭐ Destaques</h2>
+                <a href="/itens?min=4">ver todos</a>
+              </div>
+              {data.highlights.length ? (
+                <div class="stack-list">
+                  {data.highlights.map((item) => (
+                    <ItemCard item={item} showStatus />
+                  ))}
+                </div>
+              ) : (
+                <p class="empty">Nenhum destaque recente. Rode a curadoria para classificar os itens novos.</p>
+              )}
+            </section>
+          </div>
+
+          <aside>
+            <div class="panel">
+              <div class="section__head">
+                <h2>🧪 Fila de estudo</h2>
+                <a href="/estudo">quadro</a>
+              </div>
+              {data.queue.length ? (
+                <ul class="mini-list">
+                  {data.queue.map((item) => (
+                    <li>
+                      <a href={`/item/${item.id}`}>{item.title}</a>
+                      <small>{item.study_status === 'testando' ? 'Testando · ' : ''}{item.study_hint ?? item.stacks.join(', ')}</small>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="tip">Nada na fila ainda.</p>
+              )}
+            </div>
+
+            <div class="panel">
+              <h2>Stacks</h2>
+              <div class="chips">
+                {stacks.map((s) => (
+                  <a class="chip" href={`/itens?stack=${s.slug}`} title={`${s.total} no total`}>
+                    {s.slug}
+                    <span class="chip__count">{s.recent}</span>
+                  </a>
+                ))}
+              </div>
+              <p class="tip">Número = itens dos últimos 30 dias.</p>
+            </div>
+
+            <div class="panel">
+              <div class="section__head">
+                <h2>Aguardando curadoria</h2>
+                <a href="/itens?curados=pendentes">todos</a>
+              </div>
+              {data.uncurated.length ? (
+                <ul class="mini-list">
+                  {data.uncurated.map((item) => (
+                    <li>
+                      <a href={`/item/${item.id}`}>{item.title}</a>
+                      <small>
+                        {item.source} · {formatDate(item.published_at)}
+                      </small>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="tip">Tudo curado. ✓</p>
+              )}
+              <p class="tip">
+                Para curar: abra o Claude Code na pasta do projeto e rode <code>/curar</code> (ou <code>npm run curate:auto</code>).
+              </p>
+            </div>
+
+            {notes.length > 0 && (
+              <div class="panel">
+                <h2>Notas recentes</h2>
+                <ul class="mini-list">
+                  {notes.map((note) => (
+                    <li>
+                      {note.item_id ? <a href={`/item/${note.item_id}#notas`}>{note.item_title}</a> : <span>Nota solta</span>}
+                      <small>{note.body.slice(0, 120)}{note.body.length > 120 ? '…' : ''}</small>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </aside>
+        </div>
+      </>
+    )
+  }
+</Base>

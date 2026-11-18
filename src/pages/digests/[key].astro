@@ -1,0 +1,48 @@
+---
+import { Marked } from 'marked';
+import DbError from '../../components/DbError.astro';
+import Base from '../../layouts/Base.astro';
+import { digestByKey } from '../../../lib/queries.ts';
+import { escapeHtml } from '../../../lib/text.ts';
+
+const key = decodeURIComponent(Astro.params.key ?? '');
+let digest: Awaited<ReturnType<typeof digestByKey>> = null;
+let dbError: string | undefined;
+try {
+  digest = await digestByKey(key);
+} catch (error) {
+  dbError = (error as Error).message;
+}
+if (!dbError && !digest) return new Response('Digest não encontrado', { status: 404 });
+
+// HTML cru dentro do Markdown é exibido como texto (os títulos vêm de feeds externos).
+const marked = new Marked({
+  renderer: {
+    html({ text }) {
+      return escapeHtml(text);
+    },
+  },
+});
+const body = digest ? digest.markdown.replace(/^---[\s\S]*?---\s*/, '') : '';
+const html = digest ? await marked.parse(body) : '';
+---
+
+<Base title={digest?.title ?? 'Digest'} active="digests">
+  {dbError && <DbError message={dbError} />}
+  {
+    digest && (
+      <>
+        <p class="lead" style="margin-bottom: 1rem">
+          <a href="/digests">← digests</a>
+          {digest.file_path && (
+            <>
+              {' · arquivo: '}
+              <code>{digest.file_path}</code>
+            </>
+          )}
+        </p>
+        <article class="prose" set:html={html} />
+      </>
+    )
+  }
+</Base>

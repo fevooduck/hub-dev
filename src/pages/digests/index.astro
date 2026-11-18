@@ -1,0 +1,40 @@
+---
+import DbError from '../../components/DbError.astro';
+import Base from '../../layouts/Base.astro';
+import { listDigests } from '../../../lib/queries.ts';
+import { formatDate } from '../../../lib/text.ts';
+
+let digests: Awaited<ReturnType<typeof listDigests>> = [];
+let dbError: string | undefined;
+try {
+  digests = await listDigests();
+} catch (error) {
+  dbError = (error as Error).message;
+}
+---
+
+<Base title="Digests" active="digests">
+  <div class="page-head">
+    <div>
+      <h1>Digests</h1>
+      <p class="lead">Resumos gerados com <code>npm run digest</code> (ou <code>/digest</code> no Claude Code). Os arquivos .md ficam na pasta configurada em DIGEST_DIR.</p>
+    </div>
+  </div>
+  {dbError && <DbError message={dbError} />}
+  {
+    digests.length ? (
+      <ul class="mini-list panel">
+        {digests.map((d) => (
+          <li>
+            <a href={`/digests/${encodeURIComponent(d.key)}`}>{d.title}</a>
+            <small>
+              {d.item_count} itens · {d.period_start ? `${d.period_start} a ${d.period_end}` : 'todo o período'} · atualizado {formatDate(d.updated_at)}
+            </small>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      !dbError && <p class="empty">Nenhum digest ainda. Rode <code>npm run digest</code>.</p>
+    )
+  }
+</Base>

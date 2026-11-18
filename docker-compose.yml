@@ -1,0 +1,43 @@
+name: hub-dev
+
+# Postgres (com pgvector para busca semântica no futuro) + Miniflux (leitor RSS que coleta os feeds).
+# O Postgres guarda dois bancos: "miniflux" (do Miniflux, não mexa) e "hub" (curadoria, criado pelo npm run db:migrate).
+# As portas ficam presas em 127.0.0.1: nada fica exposto na rede.
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hub}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hub}
+      POSTGRES_DB: miniflux
+    ports:
+      - "127.0.0.1:${HUB_DB_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hub} -d miniflux"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  miniflux:
+    image: miniflux/miniflux:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${MINIFLUX_PORT:-8088}:8080"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-hub}:${POSTGRES_PASSWORD:-hub}@db/miniflux?sslmode=disable
+      RUN_MIGRATIONS: 1
+      CREATE_ADMIN: 1
+      ADMIN_USERNAME: ${MINIFLUX_ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${MINIFLUX_ADMIN_PASSWORD:-troque-esta-senha}
+      POLLING_FREQUENCY: ${MINIFLUX_POLLING_MINUTES:-60}
+      BASE_URL: http://localhost:${MINIFLUX_PORT:-8088}/
+
+volumes:
+  pgdata:

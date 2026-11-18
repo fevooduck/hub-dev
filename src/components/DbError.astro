@@ -1,0 +1,12 @@
+---
+interface Props {
+  message: string;
+}
+const { message } = Astro.props;
+---
+
+<div class="alert" role="alert">
+  <strong>Não consegui ler o banco.</strong>
+  <p>{message}</p>
+  <p>Confira se os containers estão de pé (<code>docker compose up -d</code>) e se as migrações rodaram (<code>npm run db:migrate</code>).</p>
+</div>

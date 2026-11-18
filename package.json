@@ -1,0 +1,44 @@
+{
+  "name": "hub-dev",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hub de novidades de desenvolvimento web para estudo: Miniflux + Postgres + curadoria com Claude Code + painel Astro.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
+    "db:migrate": "tsx cli/migrate.ts",
+    "seed": "tsx cli/seed.ts",
+    "feeds:import": "tsx cli/feeds-import.ts",
+    "ingest": "tsx cli/ingest.ts",
+    "ingest:watch": "tsx cli/ingest.ts --watch 30",
+    "curate:pending": "tsx cli/curate.ts pending",
+    "curate:apply": "tsx cli/curate.ts apply",
+    "curate:auto": "tsx cli/curate.ts auto",
+    "digest": "tsx cli/digest.ts",
+    "item": "tsx cli/item.ts",
+    "baseline": "tsx cli/baseline.ts",
+    "status": "tsx cli/status.ts",
+    "setup": "npm run db:migrate && npm run seed && npm run digest -- --all --origin seed --name 00-carga-inicial --title \"Carga inicial\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@astrojs/node": "^11.1.13",
+    "astro": "^7.4.12",
+    "dotenv": "^18.0.10",
+    "marked": "^18.2.1",
+    "pg": "^8.23.1",
+    "web-features": "^3.46.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

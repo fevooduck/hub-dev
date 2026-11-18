@@ -1,0 +1,171 @@
+---
+import DbError from '../../components/DbError.astro';
+import Base from '../../layouts/Base.astro';
+import { SUPPORT_LABEL, explorerUrl } from '../../../lib/labels.ts';
+import { addNote, STUDY_LABEL, STUDY_STATUSES, type StudyStatus, updateRelevance, updateStudyStatus } from '../../../lib/items.ts';
+import { itemById } from '../../../lib/queries.ts';
+import { formatDate, htmlToText, truncate } from '../../../lib/text.ts';
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id) || id <= 0) return new Response('Item inválido', { status: 404 });
+
+let formError: string | undefined;
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const action = String(form.get('action') ?? '');
+  try {
+    if (action === 'status') await updateStudyStatus(id, String(form.get('status')) as StudyStatus);
+    else if (action === 'relevance') await updateRelevance(id, Number(form.get('relevance')));
+    else if (action === 'note') await addNote(id, String(form.get('body') ?? ''), String(form.get('lab_path') ?? '').trim() || null);
+    else throw new Error('Ação desconhecida');
+  } catch (error) {
+    formError = (error as Error).message;
+  }
+  if (!formError) {
+    const back = String(form.get('redirect_to') ?? '');
+    const safe = back.startsWith('/') && !back.startsWith('//') ? back : `/item/${id}${action === 'note' ? '#notas' : ''}`;
+    return Astro.redirect(safe, 303);
+  }
+}
+
+let data: Awaited<ReturnType<typeof itemById>> = null;
+let dbError: string | undefined;
+try {
+  data = await itemById(id);
+} catch (error) {
+  dbError = (error as Error).message;
+}
+if (!dbError && !data) return new Response('Item não encontrado', { status: 404 });
+
+const item = data?.item;
+const excerpt = item ? truncate(htmlToText(item.content), 4000) : '';
+---
+
+<Base title={item?.title ?? 'Item'}>
+  {dbError && <DbError message={dbError} />}
+  {formError && <div class="alert" role="alert">{formError}</div>}
+  {
+    item && data && (
+      <div class="detail">
+        <div class="page-head">
+          <div>
+            <p class="lead">
+              {item.is_security && <span class="badge badge--security">Segurança</span>} {item.source} · {formatDate(item.published_at)}
+            </p>
+            <h1>{item.title}</h1>
+            <div class="chips">
+              {item.stacks.map((slug) => (
+                <a class="chip" href={`/itens?stack=${slug}`}>
+                  {slug}
+                </a>
+              ))}
+            </div>
+          </div>
+          <a class="btn btn--primary" href={item.url} target="_blank" rel="noopener noreferrer">
+            Abrir fonte ↗
+          </a>
+        </div>
+
+        <section class="card">
+          {item.summary ? <p class="card__summary">{item.summary}</p> : <p class="card__pending">Ainda sem curadoria. Rode /curar no Claude Code.</p>}
+          {item.impact && (
+            <p class="card__impact">
+              <strong>Impacto:</strong>{' '}{item.impact}
+            </p>
+          )}
+          {item.study_hint && (
+            <p class="card__impact">
+              <strong>Experimento sugerido:</strong>{' '}{item.study_hint}
+            </p>
+          )}
+        </section>
+
+        <section class="card">
+          <dl>
+            <dt>Relevância</dt>
+            <dd>{item.relevance === null ? '—' : `${'★'.repeat(item.relevance)}${'☆'.repeat(5 - item.relevance)} (${item.relevance}/5)`}</dd>
+            <dt>Suporte</dt>
+            <dd>
+              {SUPPORT_LABEL[item.support_status]}
+              {item.web_feature_id && (
+                <>
+                  {' · '}
+                  <a href={explorerUrl(item.web_feature_id)} target="_blank" rel="noopener noreferrer">
+                    {item.web_feature_id}
+                  </a>
+                </>
+              )}
+            </dd>
+            <dt>Estudo</dt>
+            <dd>{STUDY_LABEL[item.study_status]}</dd>
+            <dt>Curadoria</dt>
+            <dd>{item.curated_at ? `${item.curated_by ?? '—'} em ${formatDate(item.curated_at)}` : 'pendente'}</dd>
+            <dt>Origem</dt>
+            <dd>{item.origin}{item.category ? ` · categoria ${item.category}` : ''}</dd>
+          </dl>
+
+          <div class="actions">
+            <form method="post" class="form-row">
+              <input type="hidden" name="action" value="status" />
+              <label for="status">Status de estudo</label>
+              <select id="status" name="status">
+                {STUDY_STATUSES.map((s) => (
+                  <option value={s} selected={s === item.study_status}>
+                    {STUDY_LABEL[s]}
+                  </option>
+                ))}
+              </select>
+              <button type="submit">Salvar</button>
+            </form>
+            <form method="post" class="form-row">
+              <input type="hidden" name="action" value="relevance" />
+              <label for="relevance">Relevância</label>
+              <select id="relevance" name="relevance">
+                {[0, 1, 2, 3, 4, 5].map((n) => (
+                  <option value={n} selected={n === item.relevance}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <button type="submit">Salvar</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="card" id="notas" aria-labelledby="notas-titulo">
+          <h2 id="notas-titulo">Notas</h2>
+          <form method="post">
+            <input type="hidden" name="action" value="note" />
+            <label for="body" class="tip">O que você testou, aprendeu ou decidiu (Markdown simples):</label>
+            <textarea id="body" name="body" required></textarea>
+            <div class="form-row" style="margin-top: 0.5rem">
+              <label for="lab_path" class="tip">Pasta do experimento (opcional)</label>
+              <input type="text" id="lab_path" name="lab_path" placeholder={`lab/${item.id}-...`} />
+              <button type="submit" class="btn--primary">Adicionar nota</button>
+            </div>
+          </form>
+          {data.notes.length > 0 && (
+            <ul class="notes">
+              {data.notes.map((note) => (
+                <li>
+                  <small>
+                    {formatDate(note.created_at)}
+                    {note.lab_path ? ` · ${note.lab_path}` : ''}
+                  </small>
+                  {note.body}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {excerpt && (
+          <details class="card">
+            <summary>Trecho do feed (para consulta rápida)</summary>
+            <p class="excerpt">{excerpt}</p>
+          </details>
+        )}
+      </div>
+    )
+  }
+</Base>

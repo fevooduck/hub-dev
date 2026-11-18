@@ -1,0 +1,25 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (senhas e tokens)
+.env
+.env.*
+!.env.example
+
+# Build e cache do Astro
+dist/
+.astro/
+
+# Arquivos temporários (curadoria em JSON, logs da ingestão)
+tmp/
+*.log
+npm-debug.log*
+
+# Sistema e editores
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Configurações locais do Claude Code
+.claude/settings.local.json

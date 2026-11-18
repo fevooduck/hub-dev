@@ -1,0 +1,73 @@
+---
+import DbError from '../components/DbError.astro';
+import Base from '../layouts/Base.astro';
+import { STUDY_LABEL, type StudyStatus } from '../../lib/items.ts';
+import { studyBoard } from '../../lib/queries.ts';
+
+let board: Awaited<ReturnType<typeof studyBoard>> | undefined;
+let dbError: string | undefined;
+try {
+  board = await studyBoard();
+} catch (error) {
+  dbError = (error as Error).message;
+}
+
+const columns: { key: 'pra_testar' | 'testando' | 'testado' | 'anotado'; next: { status: StudyStatus; label: string }[] }[] = [
+  { key: 'pra_testar', next: [{ status: 'testando', label: 'Começar' }, { status: 'descartado', label: 'Descartar' }] },
+  { key: 'testando', next: [{ status: 'testado', label: 'Testado' }, { status: 'pra_testar', label: 'Voltar' }] },
+  { key: 'testado', next: [{ status: 'testando', label: 'Reabrir' }] },
+  { key: 'anotado', next: [] },
+];
+---
+
+<Base title="Estudo" active="estudo">
+  <div class="page-head">
+    <div>
+      <h1>Quadro de estudo</h1>
+      <p class="lead">Ler → resumir → testar → anotar. Ao anotar um item testado, ele vai para “Anotado”.</p>
+    </div>
+  </div>
+
+  {dbError && <DbError message={dbError} />}
+
+  {
+    board && (
+      <div class="board">
+        {columns.map((col) => (
+          <section class="board__col" aria-labelledby={`col-${col.key}`}>
+            <h2 id={`col-${col.key}`}>
+              <span>{STUDY_LABEL[col.key]}</span>
+              <span class="chip__count">{board[col.key].length}</span>
+            </h2>
+            {board[col.key].length === 0 && <p class="tip">Vazio.</p>}
+            {board[col.key].map((item) => (
+              <article class="card">
+                <div class="card__meta">
+                  <span>{item.stacks.join(' · ')}</span>
+                  {item.relevance !== null && <span class="stars">{'★'.repeat(item.relevance)}</span>}
+                </div>
+                <h3 class="card__title">
+                  <a href={`/item/${item.id}`}>{item.title}</a>
+                </h3>
+                {item.study_hint && <p class="card__hint">{item.study_hint}</p>}
+                <div class="actions">
+                  {col.next.map((n) => (
+                    <form method="post" action={`/item/${item.id}`}>
+                      <input type="hidden" name="action" value="status" />
+                      <input type="hidden" name="status" value={n.status} />
+                      <input type="hidden" name="redirect_to" value="/estudo" />
+                      <button type="submit">{n.label}</button>
+                    </form>
+                  ))}
+                  <a class="btn" href={`/item/${item.id}#notas`}>
+                    Anotar
+                  </a>
+                </div>
+              </article>
+            ))}
+          </section>
+        ))}
+      </div>
+    )
+  }
+</Base>

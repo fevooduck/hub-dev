@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Hub Dev — feeds por stack.
+  As categorias (outline de 1º nível) têm exatamente o nome das stacks do hub:
+  é assim que a ingestão já classifica cada item.
+  Validados em 17/11/2026 (todos com publicação recente), exceto os feeds de releases do GitHub,
+  que seguem o padrão https://github.com/{org}/{repo}/releases.atom.
+  Para adicionar um feed: coloque-o na categoria certa e rode `npm run feeds:import` de novo.
+-->
+<opml version="2.0">
+  <head>
+    <title>Hub Dev</title>
+  </head>
+  <body>
+    <outline text="Plataforma Web" title="Plataforma Web">
+      <outline type="rss" text="web.dev" title="web.dev" xmlUrl="https://web.dev/feed.xml" htmlUrl="https://web.dev/blog"/>
+      <outline type="rss" text="Chrome for Developers" title="Chrome for Developers" xmlUrl="https://developer.chrome.com/static/blog/feed.xml" htmlUrl="https://developer.chrome.com/blog"/>
+      <outline type="rss" text="WebKit" title="WebKit" xmlUrl="https://webkit.org/feed/" htmlUrl="https://webkit.org/blog/"/>
+      <outline type="rss" text="Mozilla Hacks" title="Mozilla Hacks" xmlUrl="https://hacks.mozilla.org/feed/" htmlUrl="https://hacks.mozilla.org/"/>
+      <outline type="rss" text="Frontend Focus" title="Frontend Focus" xmlUrl="https://frontendfoc.us/rss" htmlUrl="https://frontendfoc.us/"/>
+      <outline type="rss" text="Smashing Magazine" title="Smashing Magazine" xmlUrl="https://www.smashingmagazine.com/feed/" htmlUrl="https://www.smashingmagazine.com/"/>
+    </outline>
+
+    <outline text="CSS" title="CSS">
+      <outline type="rss" text="Bram.us" title="Bram.us" xmlUrl="https://www.bram.us/feed/" htmlUrl="https://www.bram.us/"/>
+      <outline type="rss" text="Ahmad Shadeed" title="Ahmad Shadeed" xmlUrl="https://ishadeed.com/feed.xml" htmlUrl="https://ishadeed.com/"/>
+      <outline type="rss" text="Josh W. Comeau" title="Josh W. Comeau" xmlUrl="https://www.joshwcomeau.com/rss.xml" htmlUrl="https://www.joshwcomeau.com/"/>
+    </outline>
+
+    <outline text="JavaScript" title="JavaScript">
+      <outline type="rss" text="JavaScript Weekly" title="JavaScript Weekly" xmlUrl="https://javascriptweekly.com/rss/" htmlUrl="https://javascriptweekly.com/"/>
+      <outline type="rss" text="Node.js Blog" title="Node.js Blog" xmlUrl="https://nodejs.org/en/feed/blog.xml" htmlUrl="https://nodejs.org/en/blog"/>
+      <outline type="rss" text="TypeScript Blog" title="TypeScript Blog" xmlUrl="https://devblogs.microsoft.com/typescript/feed/" htmlUrl="https://devblogs.microsoft.com/typescript/"/>
+    </outline>
+
+    <outline text="PHP" title="PHP">
+      <outline type="rss" text="php.net" title="php.net" xmlUrl="https://www.php.net/feed.atom" htmlUrl="https://www.php.net/"/>
+      <outline type="rss" text="PHP.Watch News" title="PHP.Watch News" xmlUrl="https://php.watch/feed/news.xml" htmlUrl="https://php.watch/"/>
+      <outline type="rss" text="stitcher.io" title="stitcher.io" xmlUrl="https://stitcher.io/rss" htmlUrl="https://stitcher.io/"/>
+      <outline type="rss" text="php-src releases" title="php-src releases" xmlUrl="https://github.com/php/php-src/releases.atom" htmlUrl="https://github.com/php/php-src/releases"/>
+    </outline>
+
+    <outline text="Drupal" title="Drupal">
+      <outline type="rss" text="Drupal Planet" title="Drupal Planet" xmlUrl="https://www.drupal.org/planet/rss.xml" htmlUrl="https://www.drupal.org/planet"/>
+      <outline type="rss" text="The Drop Times" title="The Drop Times" xmlUrl="https://www.thedroptimes.com/rss.xml" htmlUrl="https://www.thedroptimes.com/"/>
+    </outline>
+
+    <outline text="WordPress" title="WordPress">
+      <outline type="rss" text="WordPress News" title="WordPress News" xmlUrl="https://wordpress.org/news/feed/" htmlUrl="https://wordpress.org/news/"/>
+      <outline type="rss" text="Make WordPress Core" title="Make WordPress Core" xmlUrl="https://make.wordpress.org/core/feed/" htmlUrl="https://make.wordpress.org/core/"/>
+      <outline type="rss" text="WordPress Developer Blog" title="WordPress Developer Blog" xmlUrl="https://developer.wordpress.org/news/feed/" htmlUrl="https://developer.wordpress.org/news/"/>
+      <outline type="rss" text="Gutenberg releases" title="Gutenberg releases" xmlUrl="https://github.com/WordPress/gutenberg/releases.atom" htmlUrl="https://github.com/WordPress/gutenberg/releases"/>
+    </outline>
+
+    <outline text="React" title="React">
+      <outline type="rss" text="React Blog" title="React Blog" xmlUrl="https://react.dev/rss.xml" htmlUrl="https://react.dev/blog"/>
+      <outline type="rss" text="This Week In React" title="This Week In React" xmlUrl="https://thisweekinreact.com/newsletter/rss.xml" htmlUrl="https://thisweekinreact.com/"/>
+      <outline type="rss" text="React releases" title="React releases" xmlUrl="https://github.com/facebook/react/releases.atom" htmlUrl="https://github.com/facebook/react/releases"/>
+    </outline>
+
+    <outline text="Next.js" title="Next.js">
+      <outline type="rss" text="Next.js Blog" title="Next.js Blog" xmlUrl="https://nextjs.org/feed.xml" htmlUrl="https://nextjs.org/blog"/>
+    </outline>
+
+    <outline text="NestJS" title="NestJS">
+      <outline type="rss" text="NestJS releases" title="NestJS releases" xmlUrl="https://github.com/nestjs/nest/releases.atom" htmlUrl="https://github.com/nestjs/nest/releases"/>
+    </outline>
+
+    <outline text="Astro" title="Astro">
+      <outline type="rss" text="Astro Blog" title="Astro Blog" xmlUrl="https://astro.build/rss.xml" htmlUrl="https://astro.build/blog/"/>
+    </outline>
+
+    <outline text="Performance" title="Performance">
+      <outline type="rss" text="DebugBear" title="DebugBear" xmlUrl="https://www.debugbear.com/blog/rss.xml" htmlUrl="https://www.debugbear.com/blog"/>
+    </outline>
+
+    <outline text="SEO" title="SEO">
+      <outline type="rss" text="Google Search Central" title="Google Search Central" xmlUrl="https://developers.google.com/search/blog/feed.xml" htmlUrl="https://developers.google.com/search/blog"/>
+      <outline type="rss" text="Search Engine Journal" title="Search Engine Journal" xmlUrl="https://www.searchenginejournal.com/feed/" htmlUrl="https://www.searchenginejournal.com/"/>
+    </outline>
+
+    <outline text="Segurança" title="Segurança">
+      <outline type="rss" text="Drupal Security (core)" title="Drupal Security (core)" xmlUrl="https://www.drupal.org/security/rss.xml" htmlUrl="https://www.drupal.org/security"/>
+      <outline type="rss" text="Drupal Security (contrib)" title="Drupal Security (contrib)" xmlUrl="https://www.drupal.org/security/contrib/rss.xml" htmlUrl="https://www.drupal.org/security/contrib"/>
+      <outline type="rss" text="Patchstack (WordPress)" title="Patchstack (WordPress)" xmlUrl="https://patchstack.com/feed/" htmlUrl="https://patchstack.com/articles/"/>
+    </outline>
+  </body>
+</opml>

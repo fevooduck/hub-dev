@@ -1,0 +1,55 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  active?: 'inicio' | 'estudo' | 'itens' | 'digests';
+}
+
+const { title, active } = Astro.props;
+const nav = [
+  { href: '/', label: 'Início', key: 'inicio' },
+  { href: '/estudo', label: 'Estudo', key: 'estudo' },
+  { href: '/itens', label: 'Itens', key: 'itens' },
+  { href: '/digests', label: 'Digests', key: 'digests' },
+];
+const q = Astro.url.searchParams.get('q') ?? '';
+const favicon =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a62e8'/%3E%3Cpath d='M16 6l10 10-10 10L6 16z' fill='white'/%3E%3C/svg%3E";
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{title ? `${title} · Hub Dev` : 'Hub Dev'}</title>
+    <link rel="icon" href={favicon} />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap topbar__inner">
+        <a href="/" class="brand"><span class="brand__mark" aria-hidden="true">◆</span><span>Hub Dev</span></a>
+        <nav class="nav" aria-label="Principal">
+          {
+            nav.map((item) => (
+              <a href={item.href} class:list={['nav__link', { 'is-active': active === item.key }]} aria-current={active === item.key ? 'page' : undefined}>
+                {item.label}
+              </a>
+            ))
+          }
+        </nav>
+        <form action="/itens" method="get" class="search" role="search">
+          <input type="search" name="q" value={q} placeholder="Buscar título, resumo, fonte…" aria-label="Buscar itens" />
+        </form>
+      </div>
+    </header>
+    <main class="wrap">
+      <slot />
+    </main>
+    <footer class="wrap footer">
+      <p>Hub Dev · painel local · dados no banco <code>hub</code> · curadoria pelo Claude Code (<code>/curar</code>)</p>
+    </footer>
+  </body>
+</html>

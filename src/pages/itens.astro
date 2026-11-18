@@ -1,0 +1,87 @@
+---
+import DbError from '../components/DbError.astro';
+import ItemCard from '../components/ItemCard.astro';
+import Base from '../layouts/Base.astro';
+import { listItems, listStacks, type ListOptions } from '../../lib/queries.ts';
+
+const params = Astro.url.searchParams;
+const q = (params.get('q') ?? '').trim();
+const stack = params.get('stack') ?? '';
+const curadosParam = params.get('curados');
+const curated: ListOptions['curated'] = curadosParam === 'curados' || curadosParam === 'pendentes' ? curadosParam : 'todos';
+const min = Number(params.get('min') ?? 0) || 0;
+const page = Number(params.get('page') ?? 1) || 1;
+
+let result: Awaited<ReturnType<typeof listItems>> | undefined;
+let stacks: Awaited<ReturnType<typeof listStacks>> = [];
+let dbError: string | undefined;
+try {
+  [result, stacks] = await Promise.all([listItems({ q, stack: stack || undefined, curated, minRelevance: min || undefined, page }), listStacks()]);
+} catch (error) {
+  dbError = (error as Error).message;
+}
+
+const link = (changes: Record<string, string | number | null>) => {
+  const next = new URLSearchParams(params);
+  for (const [key, value] of Object.entries(changes)) {
+    if (value === null || value === '' || value === 0) next.delete(key);
+    else next.set(key, String(value));
+  }
+  if (!('page' in changes)) next.delete('page');
+  const qs = next.toString();
+  return qs ? `/itens?${qs}` : '/itens';
+};
+
+const stackName = stacks.find((s) => s.slug === stack)?.name;
+const heading = q ? `Busca: “${q}”` : stackName ? stackName : curated === 'pendentes' ? 'Aguardando curadoria' : 'Todos os itens';
+---
+
+<Base title={heading} active="itens">
+  <div class="page-head">
+    <div>
+      <h1>{heading}</h1>
+      {result && <p class="lead">{result.total} item(ns){min ? ` com relevância ≥ ${min}` : ''}</p>}
+    </div>
+  </div>
+
+  {dbError && <DbError message={dbError} />}
+
+  <div class="filters">
+    <div class="chips">
+      <a class:list={['chip', { 'is-active': !stack }]} href={link({ stack: null })}>todas</a>
+      {stacks.map((s) => <a class:list={['chip', { 'is-active': s.slug === stack }]} href={link({ stack: s.slug })}>{s.slug}</a>)}
+    </div>
+  </div>
+  <div class="filters">
+    <a class:list={['chip', { 'is-active': curated === 'todos' }]} href={link({ curados: null })}>todos</a>
+    <a class:list={['chip', { 'is-active': curated === 'curados' }]} href={link({ curados: 'curados' })}>curados</a>
+    <a class:list={['chip', { 'is-active': curated === 'pendentes' }]} href={link({ curados: 'pendentes' })}>pendentes</a>
+    <span class="tip">relevância mínima:</span>
+    {[0, 3, 4, 5].map((n) => <a class:list={['chip', { 'is-active': min === n }]} href={link({ min: n })}>{n === 0 ? 'qualquer' : `${n}+`}</a>)}
+  </div>
+
+  {
+    result &&
+      (result.items.length ? (
+        <div class="stack-list">
+          {result.items.map((item) => (
+            <ItemCard item={item} showStatus />
+          ))}
+        </div>
+      ) : (
+        <p class="empty">Nada encontrado com esses filtros.</p>
+      ))
+  }
+
+  {
+    result && result.pages > 1 && (
+      <nav class="pager" aria-label="Paginação">
+        {result.page > 1 && <a class="btn" href={link({ page: result.page - 1 })}>← anterior</a>}
+        <span>
+          página {result.page} de {result.pages}
+        </span>
+        {result.page < result.pages && <a class="btn" href={link({ page: result.page + 1 })}>próxima →</a>}
+      </nav>
+    )
+  }
+</Base>
